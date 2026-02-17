@@ -16,7 +16,7 @@ https://jesusbueren.github.io/growth-accounting/
 
 Source in app: Penn World Table 2023.
 
-## Suggested Class Activity (20–25 minutes)
+## Suggested Class Activity (10 minutes)
 
 Use this as a guided exercise in class.
 
