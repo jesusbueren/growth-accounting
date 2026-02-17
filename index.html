@@ -187,7 +187,7 @@ input[type=range] {
     <div class="header">
         <h1>🌍 Growth Accounting Explorer</h1>
         <p>Compare output per person and capital per person relative to a benchmark country.</p>
-        <div class="equation">y = A × k<sup>(1-α)</sup>, where benchmark country is normalized to (1, 1)</div>
+        <div class="equation">y = A × k<sup>α</sup>, where benchmark country is normalized to (1, 1)</div>
     </div>
 
     <div class="layout">
@@ -213,7 +213,7 @@ input[type=range] {
 
             <div class="section">
                 <h2>Technology Parameters</h2>
-                <div class="param-row"><span>α (labor share)</span><strong>1/3</strong></div>
+                <div class="param-row"><span>α (capital share)</span><strong>1/3</strong></div>
                 <div class="control-group">
                     <label for="aSlider">A (other country curve): <span id="aVal">1.00</span></label>
                     <input type="range" id="aSlider" min="0.30" max="2.00" step="0.001" value="1.00" />
@@ -294,7 +294,7 @@ const equationInChartPlugin = {
 
         const slider = document.getElementById('aSlider');
         const Aother = slider ? Number(slider.value) : 1;
-        const text = `y = ${Aother.toFixed(2)} × k^(1-1/3)`;
+        const text = `y = ${Aother.toFixed(2)} × k^(1/3)`;
 
         const xPixel = xScale.getPixelForValue(1.5);
         const yPixel = yScale.getPixelForValue(1.0);
@@ -471,7 +471,7 @@ function buildCurveData(alpha, Acurve, kMax) {
     const points = [];
     const upper = Math.max(1.05, kMax);
     for (let k = 0.01; k <= upper; k += 0.01) {
-        points.push({ x: k, y: Acurve * Math.pow(k, 1 - alpha) });
+        points.push({ x: k, y: Acurve * Math.pow(k, alpha) });
     }
     return points;
 }
@@ -493,7 +493,7 @@ function updateChart() {
 
     const kRelOther = other.capital_per_person / benchmark.capital_per_person;
     const yRelOther = other.output_per_person / benchmark.output_per_person;
-    const impliedA = yRelOther / Math.pow(kRelOther, 1 - alpha);
+    const impliedA = yRelOther / Math.pow(kRelOther, alpha);
     const aMatchThreshold = Math.max(MATCH_TOLERANCE_ABS, MATCH_TOLERANCE_REL * Math.abs(impliedA));
 
     if (Math.abs(Aother - impliedA) <= MATCH_SNAP_BAND) {
@@ -503,7 +503,7 @@ function updateChart() {
         aSlider.value = Aother.toFixed(3);
     }
 
-    const yModelAtOtherK = Aother * Math.pow(kRelOther, 1 - alpha);
+    const yModelAtOtherK = Aother * Math.pow(kRelOther, alpha);
     const modelMatched = Math.abs(Aother - impliedA) <= aMatchThreshold;
     document.getElementById('aVal').innerText = Aother.toFixed(2);
 
@@ -561,7 +561,7 @@ function updateChart() {
         }
     ];
 
-    const maxY = Math.max(1.2, yRelOther * 1.15, Aother * Math.pow(maxX, 1 - alpha) * 1.05);
+    const maxY = Math.max(1.2, yRelOther * 1.15, Aother * Math.pow(maxX, alpha) * 1.05);
     chart.options.scales.x.max = maxX;
     chart.options.scales.y.max = maxY;
 
@@ -591,7 +591,7 @@ function updateChart() {
     }
 
     if (modelMatched) {
-        const yIfUSCapital = Aother * Math.pow(1, 1 - alpha);
+        const yIfUSCapital = Aother * Math.pow(1, alpha);
         const capitalFactor = yIfUSCapital / yRelOther;
         if (capitalFactor >= 1) {
             statCapitalCf.innerText = `If ${otherName} had the capital of ${benchmarkName}, it would be ${capitalFactor.toFixed(2)} times richer.`;
@@ -599,7 +599,7 @@ function updateChart() {
             statCapitalCf.innerText = `If ${otherName} had the capital of ${benchmarkName}, it would be ${(1 / capitalFactor).toFixed(2)} times poorer.`;
         }
 
-        const yIfUSProductivity = Math.pow(kRelOther, 1 - alpha);
+        const yIfUSProductivity = Math.pow(kRelOther, alpha);
         const productivityFactor = yIfUSProductivity / yRelOther;
         if (productivityFactor >= 1) {
             statProductivityCf.innerText = `If ${otherName} had the productivity of ${benchmarkName} but the same capital, it would be ${productivityFactor.toFixed(2)} times richer.`;
