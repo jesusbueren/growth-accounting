@@ -249,6 +249,9 @@ const DATA_FILE = 'growth-accounting-2023-template.csv';
 const DATA_SOURCE = 'Penn World Table 2023';
 const DATA_YEAR = '2023';
 const ALPHA = 1 / 3;
+const MATCH_TOLERANCE_REL = 0.01;
+const MATCH_TOLERANCE_ABS = 0.01;
+const MATCH_SNAP_BAND = 0.015;
 
 let countryData = [];
 let chart;
@@ -477,8 +480,8 @@ function updateChart() {
     const benchmarkName = document.getElementById('benchmarkSelect').value;
     const otherName = document.getElementById('otherSelect').value;
     const alpha = ALPHA;
-    const Aother = Number(document.getElementById('aSlider').value);
-    document.getElementById('aVal').innerText = Aother.toFixed(2);
+    const aSlider = document.getElementById('aSlider');
+    let Aother = Number(aSlider.value);
 
     const benchmark = getRow(benchmarkName);
     const other = getRow(otherName);
@@ -490,10 +493,19 @@ function updateChart() {
 
     const kRelOther = other.capital_per_person / benchmark.capital_per_person;
     const yRelOther = other.output_per_person / benchmark.output_per_person;
-    const yModelAtOtherK = Aother * Math.pow(kRelOther, 1 - alpha);
     const impliedA = yRelOther / Math.pow(kRelOther, 1 - alpha);
-    const aRelativeGap = Math.abs(Aother - impliedA) / Math.max(impliedA, 1e-9);
-    const modelMatched = aRelativeGap <= 0.01;
+    const aMatchThreshold = Math.max(MATCH_TOLERANCE_ABS, MATCH_TOLERANCE_REL * Math.abs(impliedA));
+
+    if (Math.abs(Aother - impliedA) <= MATCH_SNAP_BAND) {
+        const sliderMin = Number(aSlider.min);
+        const sliderMax = Number(aSlider.max);
+        Aother = Math.max(sliderMin, Math.min(sliderMax, impliedA));
+        aSlider.value = Aother.toFixed(3);
+    }
+
+    const yModelAtOtherK = Aother * Math.pow(kRelOther, 1 - alpha);
+    const modelMatched = Math.abs(Aother - impliedA) <= aMatchThreshold;
+    document.getElementById('aVal').innerText = Aother.toFixed(2);
 
     document.getElementById('benchmarkPoint').innerText = '(1.00, 1.00)';
     document.getElementById('otherPoint').innerText = `(${kRelOther.toFixed(2)}, ${yRelOther.toFixed(2)})`;
